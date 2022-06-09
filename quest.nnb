@@ -1,0 +1,53 @@
+{
+    "cells": [
+        {
+            "language": "typescript",
+            "source": [
+                "//Function declaration\n\n// inferred return type\nfunction sum(a: number, b: number) {\n  return a + b\n}\n\n// defined return type\nfunction sum(a: number, b: number): number {\n  return a + b\n}\n\n// named function expression\nconst sum = function sum(a: number, b: number): number {\n  return a + b\n}\n\n// annonymous function expression\nconst sum = function (a: number, b: number): number {\n  return a + b\n}\n\n// arrow function\nconst sum = (a: number, b: number): number => {\n  return a + b\n}\n\n// implicit return\nconst sum = (a: number, b: number): number => a + b\n\n// implicit return of an object requires parentheses to disambiguate the curly braces\nconst sum = (a: number, b: number): {result: number} => ({result: a + b})\n\n//typed\nconst sum: (a: number, b: number) => number = (a, b) => a + b\n//OR\ntype MathFn = (a: number, b: number) => number\nconst sum: MathFn = (a, b) => a + b\n\n//Or you can use the object type syntax:\ntype MathFn = {\n  (a: number, b: number): number\n}\nconst sum: MathFn = (a, b) => a + b\n\n//you can add addition properties to the object\ntype MathFn = {\n  (a: number, b: number): number\n  operator: string\n}\nconst sum: MathFn = (a, b) => a + b\nsum.operator = '+'\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "//declare vs interface vs type\n\n//type\ntype MathFnType = {\n  (a:number, b:number): number\n  operator: string\n}\n\nconst sumType: MathFnType = (a, b) => a / b\nsumType.operator = '/'\n\nconsole.log(`Using Type: ${sumType.operator} and ${sumType(8, 2)}`);\n\n//Using Declare\ndeclare function MathFnDeclare(a:number, b:number):number;\ndeclare namespace MathFnDeclare {\n  let operator: '+'\n}\n\nconst sumDeclare: typeof MathFnDeclare = (a, b) => a + b\nsumDeclare.operator = '+'\n\nconsole.log(`Using Declare: ${sumDeclare.operator} and ${sumDeclare(1, 2)}`);\n\n// Using interface\ninterface MathFnInterface {\n  (a:number, b:number): number,\n  operator: string\n}\n\nconst sumInterface: MathFnInterface = (a, b) => a * b\nsumInterface.operator = '*'\n\nconsole.log(`Using Interface: ${sumInterface.operator} and ${sumInterface(1, 2)}`);\n"
+            ],
+            "outputs": [
+                {
+                    "items": [
+                        {
+                            "mime": "application/vnd.code.notebook.stdout",
+                            "value": [
+                                "Using Declare: + and 3",
+                                "Using Interface: * and 2",
+                                "Using Type: / and 4",
+                                ""
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "# When to use what - declare vs interface vs type\n\n## declare\n- It's useful when you use libs that don't have official typings yet\n- It's for layering on top of existing functionality without affecting actual execution.\nLet's say you import a library that has no types, but you want to use a function from that library in a type-safe way. \n\nYou can include a `.d.ts` file in your project with `declare` statements that are never executed, but layered on top for the compiler.\n\nHere's the canonical example: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types\n\nThat's the repo where people add types to public packages that don't have their own.\n\n⚠️ Some believed that it could be used for function overloading\n\n```\ndeclare function f1(p1: number, p2: number);\ndeclare function f1(p1: number, p2: string, p3: number);\nfunction f1(p1: number, p2: number | string, p3?: number) {\n  if (p3) {\n    console.log(p1, p2, p3)\n  } else {\n    console.log(p1, p2);\n  }\n}\n\nconsole.log(f1(1,2));\nconsole.log(f1(1,'2',3));\n```\nBut since the implementation code is accessible then overloading would anyways\nwork without the declare keyworkd (try removing the above two declare)\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "typescript",
+            "source": [
+                "//type vs interface\n\n/** \n * By and large - they are more or less the same\n * > Interface was built to shape an object\n * > For rest of typing use type\n*/\n\n//⭕️ Interface - you can extend\n\ninterface Mammals {\n  kind: string\n}\n\ninterface Person extends Mammals {\n  name: string\n  hungry: boolean\n}\n\nclass Harry implements Person {\n  name = 'nemo'\n  hungry = false\n  kind = 'Human'\n}\n\n// Interface - Decleration merging\n\ninterface SomeInterface {\n  prop2: string\n}\n\ninterface SomeInterface {\n  prop1: string\n  prop3: boolean\n}\n\nclass SomeClass implements SomeInterface {\n  prop2: string\n  prop1: string\n  prop3: boolean\n}\n\n// ⭕️ types\n// They are aliases for types that you want to refer ot reference many times\n// They are simple\n\ntype Hungry = boolean\nconst harry: Hungry = true\nconst nemo: Hungry = 'false' //this gives error on the original type and not the alais\n\n// type alias objects\ntype School = {\n  name: string\n  feedback: boolean\n}\n\nconst myhome: School = {\n  name: \"\",\n  feedback: false\n}\n\n//You can also implements a type in a class\nclass mystudio implements School {\n  name: string\n  feedback: boolean\n}\n\n//Types cant extent other types but you can use union or intersection\ntype SeriousPeople = {\n  name: string\n  place: string\n}\n\ntype Youtuber = {\n  isFamous: boolean\n}\n\n//Union\ntype Teen = SeriousPeople | Youtuber\n\n// The IDE does not even give code suggestion to implement missing props\nconst ramzo: Teen = {\n  isFamous: false\n}\n\n//Intersection\ntype Biker = {\n  brand: string\n} & Youtuber\n\nconst ravi: Biker = {\n  brand: 'Honda',\n  isFamous: false\n}\n\n"
+            ],
+            "outputs": []
+        },
+        {
+            "language": "markdown",
+            "source": [
+                "When to use what?\n\nFrom Typescript documenation\n\nThat said, we recommend you use interfaces over type\naliases. Specifically, because you will get better error\nmessages. If you hover over the errors on IDE, you can\nsee how TypeScript can provide terser and more focused\nmessages when working with interfaces than type.\n\n\nOne major difference between type aliases vs interfaces\nare that interfaces are open and type aliases are closed.\nThis means you can extend an interface by declaring it\na second time.\n\n\n--> When to use type:\n\n    - Use type when defining an alias for primitive types (string, boolean, number, bigint, symbol, etc)\n    - Use type when defining tuple types\n    - Use type when defining function types\n    - Use type when defining a union\n    - Use type when trying to overload functions in object types via composition\n    - Use type when needing to take advantage of mapped types\n\n--> When to use interface:\n\n    - Use interface for all object types where using type is not required (see above)\n    - Use interface when you want to take advantage of declaration merging.\n\n⭕️ Primitive types\nThe easiest difference to see between type and interface is that only type can be used to alias a primitive:\n\n```\ntype Nullish = null | undefined;\ntype Fruit = 'apple' | 'pear' | 'orange';\ntype Num = number | bigint;\n```\n\n⭕️ Tuple types\n\nTuples can only be typed via the type keyword:\n\n```\ntype row = [key: number, value: string];\n```\n\n⭕️ Function types\n\nFunctions can be typed by both the type and interface keywords:\n\n```\n// via type\ntype Sum = (x: number, y: number) => number;\n\n// via interface\ninterface Sum {\n  (x: number, y: number): number;\n}\n```\n\nSince the same effect can be achieved either way, the rule will be to use type in these scenarios since it's a little easier to read (and less verbose).\n\n\n⭕️ Union types\n\nUnion types can only be achieved with the type keyword:\n\ntype Fruit = 'apple' | 'pear' | 'orange';\ntype Vegetable = 'broccoli' | 'carrot' | 'lettuce';\n\n// 'apple' | 'pear' | 'orange' | 'broccoli' | 'carrot' | 'lettuce';\ntype HealthyFoods = Fruit | Vegetable;\n\n\n"
+            ],
+            "outputs": []
+        }
+    ]
+}
